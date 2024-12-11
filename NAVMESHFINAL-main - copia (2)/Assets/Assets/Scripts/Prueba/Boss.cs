@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;  // Necesario para el NavMesh
-using UnityEngine.UI;  // Añade esto para acceder a la clase Image
+using UnityEngine.AI;
+using UnityEngine.UI;
+using TMPro;
 
 public class Boss : MonoBehaviour
 {
@@ -38,41 +39,33 @@ public class Boss : MonoBehaviour
     public Image barra;
     public bool muerto;
 
-    private NavMeshAgent agent;  // Agregamos el NavMeshAgent
+    private NavMeshAgent agent;
 
-    // Rango de visión del jefe
-    public float rangoVision = 15f;  // Distancia máxima para que el jefe detecte al jugador
+    public float rangoVision = 15f;
 
     void Start()
     {
         ani = GetComponent<Animator>();
         target = GameObject.FindWithTag("Player");
 
-        // Comprobación de null
         if (ani == null)
             Debug.LogError("El Animator no está asignado.");
-
         if (target == null)
             Debug.LogError("El objeto con tag 'Player' no está en la escena.");
 
-        // Obtener el NavMeshAgent
         agent = GetComponent<NavMeshAgent>();
         if (agent == null)
-        {
             Debug.LogError("El NavMeshAgent no está asignado.");
-        }
     }
 
     public void Comportamiento_Boss()
     {
         if (target != null && rango != null)
         {
-            // Comprobamos si el jugador está dentro del rango de visión
             float distanciaJugador = Vector3.Distance(transform.position, target.transform.position);
 
             if (distanciaJugador < rangoVision)
             {
-                // Si está dentro del rango de visión, empieza a contar para las rutinas
                 var lookPos = target.transform.position - transform.position;
                 lookPos.y = 0;
                 var rotation = Quaternion.LookRotation(lookPos);
@@ -83,8 +76,7 @@ public class Boss : MonoBehaviour
                     switch (rutina)
                     {
                         case 0:
-                            // Usamos el NavMeshAgent para mover al Boss
-                            agent.SetDestination(target.transform.position); // Mover al jugador
+                            agent.SetDestination(target.transform.position);
                             transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 2);
                             ani.SetBool("Walk", true);
                             ani.SetBool("Run", false);
@@ -98,31 +90,31 @@ public class Boss : MonoBehaviour
                             }
                             break;
 
-                        case 1: // Run
-                            agent.SetDestination(target.transform.position); // Mover al jugador
+                        case 1:
+                            agent.SetDestination(target.transform.position);
                             transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 2);
                             ani.SetBool("Walk", false);
                             ani.SetBool("Run", true);
                             ani.SetBool("Attack", false);
+
                             cronometro += 1 * Time.deltaTime;
-                            if (cronometro > time_rutinas / 2)  // Reduce el tiempo de "dash" aquí
+                            if (cronometro > time_rutinas / 2)
                             {
-                                rutina = Random.Range(1, 5);  // Cambia a una nueva rutina
+                                rutina = Random.Range(1, 5);
                                 cronometro = 0;
                             }
                             break;
 
-                        case 2: // Ataque de llamas
+                        case 2:
                             ani.SetBool("Walk", false);
                             ani.SetBool("Run", false);
                             ani.SetBool("Attack", true);
                             ani.SetFloat("Skill", 0.8f);
                             transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 2);
-                            if (rango != null)
-                                rango.GetComponent<CapsuleCollider>().enabled = false;
+                            rango.GetComponent<CapsuleCollider>().enabled = false;
                             break;
 
-                        case 3: // Ataque de salto
+                        case 3:
                             if (fase == 2)
                             {
                                 jump_distance += 1 * Time.deltaTime;
@@ -131,8 +123,7 @@ public class Boss : MonoBehaviour
                                 ani.SetBool("Attack", true);
                                 ani.SetFloat("Skill", 0.6f);
                                 hit_Select = 3;
-                                if (rango != null)
-                                    rango.GetComponent<CapsuleCollider>().enabled = false;
+                                rango.GetComponent<CapsuleCollider>().enabled = false;
 
                                 if (direction_skill)
                                 {
@@ -145,13 +136,11 @@ public class Boss : MonoBehaviour
                                 }
                                 else
                                 {
-                                    // Lógica de aterrizaje
-                                    if (transform.position.y <= 0.5f) // Ajusta este valor según la altura del salto
+                                    if (transform.position.y <= 0.5f)
                                     {
-                                        // El jefe ha aterrizado
-                                        ani.SetBool("Attack", false); // Detén la animación de ataque de salto
-                                        rutina = 0; // Cambia a la siguiente rutina
-                                        cronometro = 0; // Reinicia el cronómetro
+                                        ani.SetBool("Attack", false);
+                                        rutina = 0;
+                                        cronometro = 0;
                                     }
                                 }
                             }
@@ -162,15 +151,14 @@ public class Boss : MonoBehaviour
                             }
                             break;
 
-                        case 4: // Lanzar bolas de fuego
+                        case 4:
                             if (fase == 2)
                             {
                                 ani.SetBool("Walk", false);
                                 ani.SetBool("Run", false);
                                 ani.SetBool("Attack", true);
                                 ani.SetFloat("Skill", 1f);
-                                if (rango != null)
-                                    rango.GetComponent<CapsuleCollider>().enabled = false;
+                                rango.GetComponent<CapsuleCollider>().enabled = false;
                                 transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 0.5f);
                             }
                             else
@@ -194,7 +182,6 @@ public class Boss : MonoBehaviour
         rutina = 0;
         ani.SetBool("Attack", false);
         atacando = false;
-        if (rango != null)
         rango.GetComponent<CapsuleCollider>().enabled = true;
         lanzallamas = false;
         jump_distance = 0;
@@ -308,10 +295,29 @@ public class Boss : MonoBehaviour
             Vivo();
         }
         else if (!muerto)
-            { 
+        {
             ani.SetTrigger("Dead");
             muerto = true;
+        }
+    }
+
+    void OnTriggerEnter(Collider coll)
+    {
+        if (coll.CompareTag("P3"))
+        {
+            WeaponAttack weapon = coll.GetComponent<WeaponAttack>();
+            if (weapon != null && weapon.isAttacking)
+            {
+                HP_Min -= weapon.daño; // Aplicar daño
+                if (HP_Min <= 0)
+                {
+                    HP_Min = 0; // Asegurar que la vida no sea negativa
+                    ani.SetTrigger("Dead"); // Activar animación de muerte
+                    muerto = true; // Cambiar el estado de muerte a verdadero
+                    Debug.Log("¡Jefe derrotado!");
+                }
+                Debug.Log("¡Daño recibido por la espada!");
             }
-        
+        }
     }
 }

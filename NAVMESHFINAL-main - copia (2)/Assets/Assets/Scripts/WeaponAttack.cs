@@ -5,7 +5,7 @@ using UnityEngine;
 public class WeaponAttack : MonoBehaviour
 {
     public float daño = 50f; // Daño que hace la espada
-    private bool isAttacking = false; // Para saber si el jugador está atacando
+    public bool isAttacking = false; // Para saber si el jugador está atacando
     private Collider swordCollider; // El collider de la espada
 
     void Start()
